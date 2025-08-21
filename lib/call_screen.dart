@@ -13,9 +13,30 @@ class CallScreen extends StatefulWidget {
 class _CallScreenState extends State<CallScreen> {
   final CallController controller = Get.put(CallController());
 
+  static const String _clientToken =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ODY3NzEwZmJhMTU1NWY5NDJjMzkwMiIsImVtYWlsIjoicmFmc2Fuc2F5ZWQxMzJAZ21haWwuY29tIiwicm9sZSI6IkNsaWVudCIsImlhdCI6MTc1MzczMzU5MCwiZXhwIjoxNzg1MjY5NTkwfQ.4Pxb5QGobQuji-dbxFsQZB6cswMkpXtcs4CRCv2fuFg';
+
+  static const String _hostToken =
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NzZlYTcxZTg0MjRlNjNlMjZhNGMxMiIsImVtYWlsIjoiZWxlZ2FuY2VzaGFqZ2hvckBnbWFpbC5jb20iLCJyb2xlIjoiSG9zdCIsImlhdCI6MTc1MzczMzY1NCwiZXhwIjoxNzg1MjY5NjU0fQ.iChokMd65b1cv6cV94jOsaPJy-e1wDyUMpC65IXSJLw';
+
+  static const String _hostId = '6876ea71e8424e63e26a4c12';
+  static const String _clientId = '68867710fba1555f942c3902';
+
   @override
   void dispose() {
     super.dispose();
+  }
+
+  void _fillForHostRole() {
+    controller.tokenController.text = _clientToken;
+    controller.peerIdController.text = _hostId;
+    Get.snackbar('Filled', 'Using Host role (client token + host id)');
+  }
+
+  void _fillForClientRole() {
+    controller.tokenController.text = _hostToken;
+    controller.peerIdController.text = _clientId;
+    Get.snackbar('Filled', 'Using Client role (host token + client id)');
   }
 
   @override
@@ -26,10 +47,33 @@ class _CallScreenState extends State<CallScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // ---- Role Quick-Fill Buttons ----
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.person),
+                    label: const Text('Host'),
+                    onPressed: _fillForHostRole,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.person_outline),
+                    label: const Text('Client'),
+                    onPressed: _fillForClientRole,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
             // Input fields
             TextField(
               controller: controller.tokenController,
               decoration: const InputDecoration(labelText: 'My Token'),
+              maxLines: 3,
             ),
             const SizedBox(height: 8),
             TextField(
