@@ -136,32 +136,76 @@ class _CallScreenState extends State<CallScreen> {
             const SizedBox(height: 20),
 
             // Local video
+            // SizedBox(
+            //   height: 180,
+            //   child: ClipRRect(
+            //     borderRadius: BorderRadius.circular(12),
+            //     child: controller.localRenderer.srcObject != null
+            //         ? RTCVideoView(controller.localRenderer, mirror: true)
+            //         : Container(
+            //             color: Colors.black12,
+            //             child: const Center(child: Text('Local video')),
+            //           ),
+            //   ),
+            // ),
             SizedBox(
               height: 180,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: controller.localRenderer.srcObject != null
-                    ? RTCVideoView(controller.localRenderer, mirror: true)
-                    : Container(
-                        color: Colors.black12,
-                        child: const Center(child: Text('Local video')),
-                      ),
+                child: Obx(() {
+                  if (!controller.isLocalStreamReady.value) {
+                    return Container(
+                      color: Colors.black12,
+                      child: const Center(child: Text('Local video')),
+                    );
+                  }
+                  return RTCVideoView(controller.localRenderer, mirror: true);
+                }),
               ),
             ),
 
+            //  Obx(() {
+            //           return SizedBox(
+            //             height: 180,
+            //             child: ClipRRect(
+            //               borderRadius: BorderRadius.circular(12),
+            //               child: controller.localRenderer.srcObject != null
+            //                   ? RTCVideoView(controller.localRenderer, mirror: true)
+            //                   : Container(
+            //                       color: Colors.black12,
+            //                       child: const Center(child: Text('Local video')),
+            //                     ),
+            //             ),
+            //           );
+            //         }),
             const SizedBox(height: 12),
 
             // Remote video
+            // SizedBox(
+            //   height: 240,
+            //   child: ClipRRect(
+            //     borderRadius: BorderRadius.circular(12),
+            //     child: controller.remoteRenderer.srcObject != null
+            //         ? RTCVideoView(controller.remoteRenderer)
+            //         : Container(
+            //             color: Colors.black12,
+            //             child: const Center(child: Text('Remote video')),
+            //           ),
+            //   ),
+            // ),
             SizedBox(
               height: 240,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: controller.remoteRenderer.srcObject != null
-                    ? RTCVideoView(controller.remoteRenderer)
-                    : Container(
-                        color: Colors.black12,
-                        child: const Center(child: Text('Remote video')),
-                      ),
+                child: Obx(() {
+                  if (!controller.isRemoteStreamReady.value) {
+                    return Container(
+                      color: Colors.black12,
+                      child: const Center(child: Text('Remote video')),
+                    );
+                  }
+                  return RTCVideoView(controller.remoteRenderer);
+                }),
               ),
             ),
 
