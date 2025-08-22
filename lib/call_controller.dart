@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/status.dart' as ws_status;
 import 'package:flutter_webrtc/flutter_webrtc.dart' as webrtc;
 import 'package:flutter/material.dart';
-import 'package:web_socket_channel/status.dart' as ws_status;
+import 'package:webrtc/urls.dart';
 
-const String kWsUrl =
-    'ws://204.197.173.249:12003'; // replace with your signaling URL
 
+const String kWsUrl = SignalingConstants.wsUrl; // keep your constant if you have it
 class CallController extends GetxController {
   IOWebSocketChannel? _channel;
 
@@ -50,17 +50,15 @@ class CallController extends GetxController {
 
     statusText.value = 'Connecting WS...';
 
-    _channel!.stream.listen(
-      _onWsMessage,
-      onError: (e, st) {
-        statusText.value = 'WS Error: $e';
-        _cleanupWs();
-      },
-      onDone: () {
-        statusText.value = 'WS Closed';
-        _cleanupWs();
-      },
-    );
+    _channel!.stream.listen(_onWsMessage,
+        onError: (e, st) {
+          statusText.value = 'WS Error: $e';
+          _cleanupWs();
+        },
+        onDone: () {
+          statusText.value = 'WS Closed';
+          _cleanupWs();
+        });
 
     final token = tokenController.text.trim();
     _sendWs({'event': 'authenticate', 'token': token});
@@ -76,9 +74,7 @@ class CallController extends GetxController {
   void _onWsMessage(dynamic message) async {
     Map<String, dynamic> data;
     try {
-      data = (message is String)
-          ? jsonDecode(message)
-          : Map<String, dynamic>.from(message);
+      data = (message is String) ? jsonDecode(message) : Map<String, dynamic>.from(message);
     } catch (e) {
       statusText.value = 'Bad WS message';
       return;
@@ -103,20 +99,17 @@ class CallController extends GetxController {
 
         _ringingTimeout?.cancel();
         _ringingTimeout = Timer(const Duration(seconds: 30), () {
-          if (!inCall.value)
-            rejectCall(_incomingCallData!['fromUserId'].toString());
+          if (!inCall.value) rejectCall(_incomingCallData!['fromUserId'].toString());
         });
         break;
 
       case 'callAnswered':
         final answer = data['data']?['answer'];
         if (_pc != null && answer != null) {
-          await _pc!.setRemoteDescription(
-            webrtc.RTCSessionDescription(
-              answer['sdp'] as String,
-              answer['type'] as String,
-            ),
-          );
+          await _pc!.setRemoteDescription(webrtc.RTCSessionDescription(
+            answer['sdp'] as String,
+            answer['type'] as String,
+          ));
           statusText.value = 'Call connected';
         }
         break;
@@ -125,15 +118,11 @@ class CallController extends GetxController {
         final c = data['data']?['candidate'];
         if (_pc != null && c != null) {
           try {
-            await _pc!.addCandidate(
-              webrtc.RTCIceCandidate(
-                c['candidate'] as String?,
-                c['sdpMid'] as String?,
-                (c['sdpMLineIndex'] is int)
-                    ? c['sdpMLineIndex'] as int
-                    : (c['sdpMLineIndex'] as num?)?.toInt(),
-              ),
-            );
+            await _pc!.addCandidate(webrtc.RTCIceCandidate(
+              c['candidate'] as String?,
+              c['sdpMid'] as String?,
+              (c['sdpMLineIndex'] is int) ? c['sdpMLineIndex'] as int : (c['sdpMLineIndex'] as num?)?.toInt(),
+            ));
           } catch (_) {}
         }
         break;
@@ -147,10 +136,7 @@ class CallController extends GetxController {
     }
   }
 
-  void _showIncomingDialog({
-    required String fromUserId,
-    required String callType,
-  }) {
+  void _showIncomingDialog({required String fromUserId, required String callType}) {
     if (Get.isDialogOpen == true) return;
     Get.defaultDialog(
       title: 'Incoming ${callType.toUpperCase()} Call',
@@ -226,12 +212,10 @@ class CallController extends GetxController {
     if (_pc == null) return;
 
     final offer = _incomingCallData!['offer'];
-    await _pc!.setRemoteDescription(
-      webrtc.RTCSessionDescription(
-        offer['sdp'] as String,
-        offer['type'] as String,
-      ),
-    );
+    await _pc!.setRemoteDescription(webrtc.RTCSessionDescription(
+      offer['sdp'] as String,
+      offer['type'] as String,
+    ));
 
     final answer = await _pc!.createAnswer();
     await _pc!.setLocalDescription(answer);
@@ -271,25 +255,21 @@ class CallController extends GetxController {
         'audio': true,
         'video': video
             ? {
-                'facingMode': 'user',
-                'width': 640,
-                'height': 480,
-                'frameRate': 30,
-              }
+          'facingMode': 'user',
+          'width': 640,
+          'height': 480,
+          'frameRate': 30,
+        }
             : false,
       };
-      _localStream = await webrtc.navigator.mediaDevices.getUserMedia(
-        constraints,
-      );
+      _localStream = await webrtc.navigator.mediaDevices.getUserMedia(constraints);
       localRenderer.srcObject = _localStream;
 
       for (final track in _localStream!.getTracks()) {
         await _pc!.addTrack(track, _localStream!);
       }
 
-      print(
-        '[Local Stream] Tracks: ${_localStream!.getTracks().map((t) => t.kind).toList()}',
-      );
+      print('[Local Stream] Tracks: ${_localStream!.getTracks().map((t) => t.kind).toList()}');
     } catch (e) {
       Get.snackbar('Media Error', 'Failed to access camera/microphone.');
       await _pc?.close();
@@ -301,9 +281,7 @@ class CallController extends GetxController {
     _pc!.onTrack = (event) {
       if (event.streams.isNotEmpty) {
         remoteRenderer.srcObject = event.streams.first;
-        print(
-          '[Remote Stream] Tracks: ${event.streams.first.getTracks().map((t) => t.kind).toList()}',
-        );
+        print('[Remote Stream] Tracks: ${event.streams.first.getTracks().map((t) => t.kind).toList()}');
       }
     };
 
@@ -328,8 +306,7 @@ class CallController extends GetxController {
     };
 
     _pc!.onIceConnectionState = (state) {
-      if (state ==
-              webrtc.RTCIceConnectionState.RTCIceConnectionStateDisconnected ||
+      if (state == webrtc.RTCIceConnectionState.RTCIceConnectionStateDisconnected ||
           state == webrtc.RTCIceConnectionState.RTCIceConnectionStateFailed ||
           state == webrtc.RTCIceConnectionState.RTCIceConnectionStateClosed) {
         _endCallInternal();
@@ -341,8 +318,7 @@ class CallController extends GetxController {
     final toUserId = peerIdController.text.trim().isNotEmpty
         ? peerIdController.text.trim()
         : _incomingCallData?['fromUserId']?.toString();
-    if (toUserId != null)
-      _sendWs({'event': 'disconnectCall', 'toUserId': toUserId});
+    if (toUserId != null) _sendWs({'event': 'disconnectCall', 'toUserId': toUserId});
     _endCallInternal();
   }
 
